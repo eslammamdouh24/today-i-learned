@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "./style.css";
 import Header from "./components/Header";
 import NewFactForm from "./components/NewFactForm";
@@ -14,37 +14,30 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentCategory, setCurrentCategory] = useState("all");
 
-  useEffect(() => {
-    loadFacts();
+  const loadFacts = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const factsData = await getFacts(currentCategory);
+      if (factsData) setFacts(factsData);
+    } finally {
+      setShowForm(false);
+      setIsLoading(false);
+    }
   }, [currentCategory]);
 
-  const loadFacts = async () => {
-    setIsLoading(true);
-
-    const factsData = await getFacts(currentCategory);
-
-    if (factsData) {
-      setFacts(factsData);
-    }
-
-    setShowForm(false);
-    setIsLoading(false);
-  };
+  useEffect(() => {
+    loadFacts();
+  }, [loadFacts]);
 
   return (
     <>
-      <Header
-        showForm={showForm}
-        setShowForm={() => setShowForm((prev) => !prev)}
-      />
-
+      <Header showForm={showForm} setShowForm={() => setShowForm((p) => !p)} />
       {showForm ? (
         <NewFactForm setFacts={setFacts} setShowForm={setShowForm} />
       ) : null}
 
       <main className="main">
         <CategoryFilter setCurrentCategory={setCurrentCategory} />
-
         {isLoading ? (
           <Loader />
         ) : (
